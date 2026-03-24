@@ -1,22 +1,42 @@
-"""
-URL configuration for doctor_booking_backend project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView
+
+from users.views import RegisterView, LoginView, LogoutView, MeView, RoleViewSet
+from doctors.views import DoctorViewSet, ClinicViewSet, DoctorClinicViewSet, DoctorAvailabilityViewSet
+from patients.views import PatientViewSet
+from appointments.views import AppointmentViewSet, AppointmentStatusHistoryViewSet, ReviewViewSet
+from medical_records.views import (MedicalRecordViewSet, ConsultationViewSet, DiagnosisViewSet,
+    MedicationViewSet, PrescriptionViewSet, AttachmentViewSet)
+
+router = DefaultRouter()
+router.register(r'roles', RoleViewSet)
+router.register(r'doctors', DoctorViewSet)
+router.register(r'clinics', ClinicViewSet)
+router.register(r'doctor-clinics', DoctorClinicViewSet)
+router.register(r'doctor-availability', DoctorAvailabilityViewSet)
+router.register(r'patients', PatientViewSet)
+router.register(r'appointments', AppointmentViewSet)
+router.register(r'appointment-history', AppointmentStatusHistoryViewSet)
+router.register(r'reviews', ReviewViewSet)
+router.register(r'medical-records', MedicalRecordViewSet)
+router.register(r'consultations', ConsultationViewSet)
+router.register(r'diagnoses', DiagnosisViewSet)
+router.register(r'medications', MedicationViewSet)
+router.register(r'prescriptions', PrescriptionViewSet)
+router.register(r'attachments', AttachmentViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Auth
+    path('api/auth/register/', RegisterView.as_view()),
+    path('api/auth/login/', LoginView.as_view()),
+    path('api/auth/logout/', LogoutView.as_view()),
+    path('api/auth/me/', MeView.as_view()),
+    path('api/auth/refresh/', TokenRefreshView.as_view()),
+
+    # API
+    path('api/', include(router.urls)),
 ]

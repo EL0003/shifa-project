@@ -37,15 +37,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
     'users.apps.UsersConfig',
     'doctors.apps.DoctorsConfig',
     'patients.apps.PatientsConfig',
     'appointments.apps.AppointmentsConfig',
+    'medical_records',
+'rest_framework_simplejwt.token_blacklist',
+	
+    # ... default django apps ...
+    'rest_framework',
+    'corsheaders',
+    'django_filters',
+
+  
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -74,13 +83,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'doctor_booking_backend.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'shifa_db',
+        'USER': 'shifa_user',
+        'PASSWORD': 'shifa1234',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 
@@ -120,3 +130,29 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+# CORS Settings for Flutter
+CORS_ALLOW_ALL_ORIGINS = True
+
+# JWT Settings
+from datetime import timedelta
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# Override default auth to avoid SimpleJWT user lookup issues
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [],
+}

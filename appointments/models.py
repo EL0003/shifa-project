@@ -1,28 +1,49 @@
-from datetime import timezone
-from email.policy import default
 from django.db import models
-
-# Create your models here.
-from doctors.models import Doctor
-from patients.models import Patient
-
+from django.utils import timezone
+from patients.models import PatientProfile
+from doctors.models import DoctorProfile, Clinic
 
 class Appointment(models.Model):
-    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
-    date_time = models.DateTimeField(null=True, blank=True)# موعد الموعد (تاريخ + ساعة)
-    
-
-    status_choices = [
+    CONSULTATION_TYPES = [('in_person', 'In Person'), ('teleconsultation', 'Teleconsultation')]
+    STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
         ('done', 'Done'),
-        ('canceled', 'Canceled'),]
-    status = models.CharField(
-        max_length=10, choices=status_choices, default='pending')
+        ('canceled', 'Canceled'),
+    ]
 
-    def __str__(self):
-        return f"Appointment: {self.patient.full_name} with Dr. {self.doctor.full_name} on {self.date_time.strftime('%Y-%m-%d %H:%M')}"
+    patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='appointments')
+    doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, related_name='appointments')
+    clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, related_name='appointments')
+    scheduled_datetime = models.DateTimeField()
+    consultation_type = models.CharField(max_length=20, choices=CONSULTATION_TYPES, default='in_person')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    notes = models.TextField(blank=True, null=True)
 
     class Meta:
-        # منع حجز نفس الطبيب في نفس الوقت
-        unique_together = ('doctor', 'date_time')
+        unique_together = ('doctor', 'scheduled_datetime')
+
+    def __str__(self):
+        return f"{self.patient.full_name} → Dr.{self.doctor.full_name} on {self.scheduled_datetime}"
+
+
+class AppointmentStatusHistory(models.Model):
+    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='status_history')
+    old_status = models.CharField(max_length=20)
+    new_status = models.CharField(max_length=20)
+    changed_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Appointment #{self.appointment.id}: {self.old_status} → {self.new_status}"
+
+
+class Review(models.Model):
+    appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name='review')
+    rating_waiting = models.IntegerField()    # 1-5
+    rating_hygiene = models.IntegerField()    # 1-5
+    rating_attentiveness = models.IntegerField()  # 1-5
+    comment = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Review for Appointment #{self.appointment.id}"
