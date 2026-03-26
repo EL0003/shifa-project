@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -42,14 +43,14 @@ INSTALLED_APPS = [
     'patients.apps.PatientsConfig',
     'appointments.apps.AppointmentsConfig',
     'medical_records',
-'rest_framework_simplejwt.token_blacklist',
-	
+    'rest_framework_simplejwt.token_blacklist',
+
     # ... default django apps ...
     'rest_framework',
     'corsheaders',
     'django_filters',
 
-  
+
 ]
 
 MIDDLEWARE = [
@@ -134,7 +135,6 @@ STATIC_URL = 'static/'
 CORS_ALLOW_ALL_ORIGINS = True
 
 # JWT Settings
-from datetime import timedelta
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
