@@ -157,10 +157,14 @@ class PatientDashboardView(APIView):
         pending = all_appointments.filter(status='pending').count()
         confirmed = all_appointments.filter(status='confirmed').count()
 
-        upcoming_appointment = all_appointments.filter(
+        upcoming = all_appointments.filter(
             scheduled_datetime__gte=timezone.now(),
-            status__in=['confirmed', 'pending']
-        ).order_by('scheduled_datetime').first()
+            status__in=['pending', 'confirmed']
+        ).order_by('scheduled_datetime')
+
+        past = all_appointments.filter(
+            status__in=['completed', 'canceled', 'rejected']
+        ).order_by('-scheduled_datetime')
 
         from medical_records.models import Prescription
         recent_prescriptions = Prescription.objects.filter(
@@ -179,8 +183,7 @@ class PatientDashboardView(APIView):
         } for p in recent_prescriptions]
 
         unread_notifications = Notification.objects.filter(
-            user_id=user_id,
-            is_read=False
+            user_id=user_id, is_read=False
         ).count()
 
         unread_messages = AppointmentMessage.objects.filter(
@@ -193,17 +196,23 @@ class PatientDashboardView(APIView):
                 'id': patient.id,
                 'full_name': patient.full_name,
                 'phone_number': patient.phone_number,
-                'email': request.user.email,
+                'email': patient.user.email,
+                'date_of_birth': patient.date_of_birth,
+                'gender': patient.gender,
             },
             'stats': {
                 'total_appointments': total,
+                'upcoming': upcoming.count(),
                 'completed': completed,
                 'canceled': canceled,
                 'pending': pending,
                 'confirmed': confirmed,
             },
-            'upcoming_appointment': AppointmentSerializer(upcoming_appointment).data if upcoming_appointment else None,
+            'upcoming_appointment': AppointmentSerializer(upcoming.first).data if upcoming.exists() else None,
+            'upcoming_appointments': AppointmentSerializer(upcoming[:5], many=True).data,
+            'past_appointments': AppointmentSerializer(past[:5], many=True).data,
             'recent_prescriptions': prescriptions_data,
+            'unread_notifications': unread_notifications,
             'unread_notifications_count': unread_notifications,
             'unread_messages_count': unread_messages,
         })

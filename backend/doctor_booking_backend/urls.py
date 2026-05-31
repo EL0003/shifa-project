@@ -19,7 +19,7 @@ from medical_records.views import (MedicalRecordViewSet, ConsultationViewSet, Di
     MedicationViewSet, PrescriptionViewSet, AttachmentViewSet)
 from notifications.views import NotificationViewSet
 from chat.views import ChatRoomViewSet
-from dashboard.views import DoctorDashboardView, PatientDashboardView
+from dashboard.views import DoctorDashboardView, PatientDashboardView, PatientDashboardView
 
 router = DefaultRouter()
 router.register(r'roles', RoleViewSet)
@@ -52,6 +52,7 @@ urlpatterns = [
     path('api/auth/refresh/', TokenRefreshView.as_view()),
     path('api/', include(router.urls)),
     path('api/dashboard/doctor/', DoctorDashboardView.as_view()),
+    path('api/dashboard/patient/', PatientDashboardView.as_view()),
     path('api/dashboard/patient/', PatientDashboardView.as_view()),
     path('api/notifications/', include('notifications.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
