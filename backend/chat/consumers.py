@@ -49,6 +49,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not content:
             return
 
+        room_status = await self.get_room_status(self.room_id)
+
+        # Patients cannot send messages in pending rooms
+        if self.user_role == 'patient' and room_status == 'pending':
+            await self.send(text_data=json.dumps({
+                'error': 'Waiting for the doctor to accept your request.',
+            }))
+            return
+
+        # Nobody can send messages in rejected rooms
+        if room_status == 'rejected':
+            await self.send(text_data=json.dumps({
+                'error': 'This conversation request was rejected.',
+            }))
+            return
+
         message = await self.save_message(self.room_id, self.user_id, content)
 
         await self.channel_layer.group_send(
@@ -97,6 +113,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
         except ChatRoom.DoesNotExist:
             return False
+
+    @database_sync_to_async
+    def get_room_status(self, room_id):
+        from .models import ChatRoom
+        try:
+            room = ChatRoom.objects.get(id=room_id)
+            return room.status
+        except ChatRoom.DoesNotExist:
+            return 'rejected'
 
     @database_sync_to_async
     def save_message(self, room_id, user_id, content):

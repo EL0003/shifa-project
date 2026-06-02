@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import ChatRoom, ChatMessage
+from doctors.models import DoctorProfile
+from patients.models import PatientProfile
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
@@ -16,11 +18,24 @@ class ChatRoomSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='patient.full_name', read_only=True)
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
+    doctor = serializers.PrimaryKeyRelatedField(
+        queryset=DoctorProfile.objects.all(),
+        required=False,
+        allow_null=True,
+        default=None,
+    )
+    patient = serializers.PrimaryKeyRelatedField(
+        queryset=PatientProfile.objects.all(),
+        required=False,
+        allow_null=True,
+        default=None,
+    )
 
     class Meta:
         model = ChatRoom
         fields = ['id', 'doctor', 'patient', 'doctor_name', 'patient_name',
-                  'created_at', 'last_message', 'unread_count']
+                  'status', 'created_at', 'last_message', 'unread_count']
+        read_only_fields = ['status']
 
     def get_last_message(self, obj):
         msg = obj.messages.last()
