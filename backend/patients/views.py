@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.backends import TokenBackend
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
-from users.permissions import IsAdminRole, IsAuthenticated
+from users.permissions import IsAdminRole, IsAdminOrDoctor, IsAuthenticated
 from .models import PatientProfile
 from .serializers import PatientSerializer
 
@@ -31,7 +31,7 @@ class PatientViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
-            return [IsAdminRole()]
+            return [IsAdminOrDoctor()]
         return [IsAuthenticated()]
 
     @action(detail=False, methods=['get', 'patch'])
